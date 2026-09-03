@@ -1,0 +1,38 @@
+name: Aggiorna feed RSS
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "*/15 * * * *"
+
+permissions:
+  contents: write
+
+jobs:
+  update-feed:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Scarica repository
+        uses: actions/checkout@v4
+
+      - name: Configura Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Genera feed RSS
+        run: python generate_feed.py
+
+      - name: Salva eventuali aggiornamenti
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add feed.xml
+
+          if git diff --cached --quiet; then
+            echo "Nessun aggiornamento."
+          else
+            git commit -m "Aggiornamento automatico feed RSS"
+            git push
+          fi
